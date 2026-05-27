@@ -1,0 +1,120 @@
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --border: #e9ecef;
+  --border-strong: #dee2e6;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a5568;
+  --text-muted: #9aa5b4;
+  --decide-bg: #fff5f5;
+  --decide-text: #c53030;
+  --decide-border: #feb2b2;
+  --delegate-bg: #fffbeb;
+  --delegate-text: #b7791f;
+  --delegate-border: #f6e05e;
+  --ignore-bg: #f7fafc;
+  --ignore-text: #718096;
+  --ignore-border: #e2e8f0;
+  --urgency-high-bg: #fff5f5;
+  --urgency-high-text: #c53030;
+  --urgency-medium-bg: #fffbeb;
+  --urgency-medium-text: #b7791f;
+  --urgency-low-bg: #f0fff4;
+  --urgency-low-text: #276749;
+  --channel-email: #4a90d9;
+  --channel-slack: #4a154b;
+  --channel-whatsapp: #25d366;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(to right, #f1f3f5 8%, #e9ecef 18%, #f1f3f5 33%);
+  background-size: 800px 104px;
+  animation: shimmer 1.2s linear infinite;
+  border-radius: 8px;
+}
+
+@keyframes indeterminateProgress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+.progress-track {
+  width: 360px;
+  max-width: 90vw;
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, rgba(74, 144, 217, 0.2), rgba(74, 144, 217, 0.75));
+  border-radius: 999px;
+  animation: indeterminateProgress 1.2s ease-in-out infinite;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only-briefing {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .app-layout {
+    display: block !important;
+  }
+
+  .main-content {
+    overflow: visible !important;
+  }
+}
