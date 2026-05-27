@@ -98,6 +98,103 @@ def _normalize_analysis_payload(data: dict) -> dict:
         for item in triage:
             if isinstance(item, dict) and "delegate_to" in item:
                 item["delegate_to"] = _delegate_to_to_string(item.get("delegate_to"))
+
+    flags = data.get("flags")
+    if isinstance(flags, list):
+        for flag in flags:
+            if not isinstance(flag, dict):
+                continue
+            action = str(flag.get("recommended_action", "")).strip()
+            if action:
+                continue
+            flag_type = str(flag.get("type", "")).strip()
+            default_actions = {
+                "SECURITY_RISK": "Do not click links; forward to IT/security and block sender domain.",
+                "SCHEDULING_CONFLICT": "Resolve calendar clash now and send updated invites to all participants.",
+                "LIVE_INCIDENT": "Assign incident lead, choose rollback/hotfix path, and post 30-min updates.",
+                "RELATIONSHIP_RISK": "Contact stakeholder directly today with clear plan and owner.",
+                "INTERNAL_MISALIGNMENT": "Align owners internally on one narrative before next external update.",
+                "HARD_DEADLINE": "Assign owner immediately and confirm completion timeline before deadline.",
+            }
+            flag["recommended_action"] = default_actions.get(
+                flag_type, "Assign an owner and execute the next concrete step now."
+            )
+
+    briefing = data.get("briefing")
+    if isinstance(briefing, dict):
+        sections = briefing.get("sections")
+        if isinstance(sections, list):
+            for section in sections:
+                if not isinstance(section, dict):
+                    continue
+                items = section.get("items")
+                if not isinstance(items, list):
+                    continue
+                coerced: list[str] = []
+                for it in items:
+                    if isinstance(it, str):
+                        coerced.append(it)
+                        continue
+                    if isinstance(it, dict):
+                        subject = str(it.get("subject", "")).strip()
+                        sender = str(it.get("from", "")).strip()
+                        mid = it.get("id")
+                        # Keep briefing items clean: prefer subject; otherwise fall back to a short message ref.
+                        if subject:
+                            coerced.append(subject)
+                        elif isinstance(mid, int):
+                            coerced.append(f"Msg #{mid}")
+                        else:
+                            coerced.append(sender if sender else json.dumps(it, separators=(",", ":")))
+                        continue
+                    coerced.append(str(it))
+                section["items"] = coerced
+    return data
+
+
+def _message_blurb_by_id(messages: list[Message]) -> dict[int, str]:
+    blurbs: dict[int, str] = {}
+    for m in messages:
+        subject = (m.subject or "").strip()
+        body = (m.body or "").strip().split("\n")[0]
+        if subject:
+            text = subject
+        else:
+            text = f"{body[:80]}{'…' if len(body) > 80 else ''}"
+        blurbs[m.id] = text
+    return blurbs
+
+
+def _cleanup_briefing_items(data: dict, messages: list[Message]) -> dict:
+    briefing = data.get("briefing")
+    if not isinstance(briefing, dict):
+        return data
+
+    sections = briefing.get("sections")
+    if not isinstance(sections, list):
+        return data
+
+    message_map = _message_blurb_by_id(messages)
+    msg_ref_re = re.compile(r"^Msg\s*#\s*(\d+)\s*$", re.IGNORECASE)
+
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        items = section.get("items")
+        if not isinstance(items, list):
+            continue
+
+        cleaned: list[str] = []
+        for item in items:
+            text = item if isinstance(item, str) else str(item)
+            match = msg_ref_re.match(text.strip())
+            if match:
+                mid = int(match.group(1))
+                cleaned.append(message_map.get(mid, f"Message #{mid}"))
+            else:
+                cleaned.append(text)
+        section["items"] = cleaned
+
     return data
 
 
@@ -129,6 +226,12 @@ def _generate_json(full_prompt: str, *, max_output_tokens: int | None = None) ->
             try:
                 response = model.generate_content(full_prompt)
                 return _safe_json_loads(response.text)
+            except json.JSONDecodeError as e:
+                # Model emitted invalid JSON; retry quickly.
+                last_error = e
+                if attempt < 2:
+                    continue
+                break
             except Exception as e:
                 last_error = e
                 if _is_model_not_found(e):
@@ -157,11 +260,17 @@ async def analyze(request: AnalyzeRequest):
                 "\n\nIMPORTANT: For this run, set drafted_response to an empty string "
                 "and delegate_to to null for ALL triage items. Do not draft replies."
             )
+        prompt += (
+            "\n\nOUTPUT RULES: Return ONLY a single JSON object. Do not use markdown. "
+            "No trailing commas. Escape any newlines inside strings as \\n. "
+            "Prefer compact/minified JSON."
+        )
 
         full_prompt = prompt + "\n\nMessages:\n" + messages_json
         data = _normalize_analysis_payload(
             _generate_json(full_prompt, max_output_tokens=2048 if not include_drafts else None)
         )
+        data = _cleanup_briefing_items(data, request.messages)
         return AnalysisResponse(**data)
     except Exception as e:
         if _is_quota_error(e):
@@ -195,6 +304,7 @@ async def drafts(request: DraftsRequest):
             "- For DELEGATE: drafted_response must be a ready-to-send handoff message and delegate_to must be a string.\n"
             "- For DECIDE: drafted_response must be a ready-to-send reply/action message and delegate_to must be null.\n"
             "- For IGNORE: drafted_response must be an empty string and delegate_to must be null.\n\n"
+            "Output rules: single JSON object only, no markdown, no trailing commas, escape newlines as \\n.\n\n"
             "Return schema:\n"
             "{\"updates\":[{\"id\":1,\"drafted_response\":\"\",\"delegate_to\":null}]}\n"
         )
