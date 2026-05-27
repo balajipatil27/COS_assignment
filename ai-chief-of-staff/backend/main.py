@@ -101,6 +101,19 @@ def _normalize_analysis_payload(data: dict) -> dict:
     return data
 
 
+def _safe_json_loads(text: str) -> dict:
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        # Try to extract the first JSON object from the text.
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            candidate = text[start : end + 1]
+            return json.loads(candidate)
+        raise
+
+
 def _generate_json(full_prompt: str, *, max_output_tokens: int | None = None) -> dict:
     models_to_try: list[str] = []
     for name in [GEMINI_MODEL, *FALLBACK_MODELS, DEFAULT_MODEL]:
@@ -115,7 +128,7 @@ def _generate_json(full_prompt: str, *, max_output_tokens: int | None = None) ->
         for attempt in range(3):
             try:
                 response = model.generate_content(full_prompt)
-                return json.loads(response.text)
+                return _safe_json_loads(response.text)
             except Exception as e:
                 last_error = e
                 if _is_model_not_found(e):
