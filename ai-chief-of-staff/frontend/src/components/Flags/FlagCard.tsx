@@ -25,13 +25,10 @@ export default function FlagCard({ flag }: FlagCardProps) {
 
   return (
     <article
+      className="elevated-card"
       style={{
         display: 'flex',
-        background: 'var(--bg-primary)',
-        border: '1px solid var(--border)',
-        borderRadius: '8px',
         overflow: 'hidden',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
       }}
     >
       <div

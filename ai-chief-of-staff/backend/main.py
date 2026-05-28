@@ -51,6 +51,85 @@ def _retry_delay_seconds(exc: BaseException, attempt: int) -> float:
     return min(2**attempt, 8)
 
 
+def _coerce_id(value, fallback: int) -> int:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        match = re.search(r"\d+", value)
+        if match:
+            return int(match.group(0))
+    return fallback
+
+
+def _to_sender_string(value) -> str:
+    if isinstance(value, str):
+        return value.strip() or "Unknown sender"
+    if isinstance(value, dict):
+        name = str(value.get("name", "")).strip()
+        email = str(value.get("email", "")).strip()
+        handle = str(value.get("slack_handle", "")).strip()
+        phone = str(value.get("phone", "")).strip()
+        if name and email:
+            return f"{name} <{email}>"
+        if name:
+            return name
+        if email:
+            return email
+        if handle:
+            return handle
+        if phone:
+            return phone
+    return "Unknown sender"
+
+
+def _to_text(value) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        parts = [str(v).strip() for v in value.values() if str(v).strip()]
+        return ", ".join(parts) if parts else None
+    if isinstance(value, list):
+        parts = [str(v).strip() for v in value if str(v).strip()]
+        return ", ".join(parts) if parts else None
+    return str(value)
+
+
+def _normalize_incoming_messages(raw_messages: list[dict]) -> list[Message]:
+    normalized: list[Message] = []
+    for idx, raw in enumerate(raw_messages, start=1):
+        if not isinstance(raw, dict):
+            raise HTTPException(
+                status_code=422,
+                detail=f"messages[{idx - 1}] must be an object",
+            )
+
+        payload = {
+            "id": _coerce_id(raw.get("id"), idx),
+            "channel": str(raw.get("channel", "email")).strip().lower() or "email",
+            "from": _to_sender_string(raw.get("from")),
+            "timestamp": str(raw.get("timestamp", "")).strip() or "1970-01-01T00:00:00Z",
+            "body": _to_text(raw.get("body")) or _to_text(raw.get("text")) or "",
+            "subject": _to_text(raw.get("subject")),
+            "channel_name": _to_text(raw.get("channel_name")),
+            "to": _to_text(raw.get("to")),
+        }
+
+        if not payload["body"]:
+            payload["body"] = "(no body provided)"
+
+        try:
+            normalized.append(Message(**payload))
+        except Exception as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f"messages[{idx - 1}] could not be normalized: {e}",
+            ) from e
+
+    return normalized
+
+
 def _compact_message(message: Message) -> dict:
     data = message.model_dump(by_alias=True, exclude_none=True)
     body = data.get("body", "")
@@ -251,7 +330,8 @@ def _generate_json(full_prompt: str, *, max_output_tokens: int | None = None) ->
 @app.post("/api/analyze", response_model=AnalysisResponse)
 async def analyze(request: AnalyzeRequest):
     try:
-        messages_json = _prepare_messages_json(request.messages)
+        messages = _normalize_incoming_messages(request.messages)
+        messages_json = _prepare_messages_json(messages)
         include_drafts = os.getenv("INCLUDE_DRAFTS_BY_DEFAULT", "0").strip() == "1"
 
         prompt = get_system_prompt()
@@ -270,7 +350,7 @@ async def analyze(request: AnalyzeRequest):
         data = _normalize_analysis_payload(
             _generate_json(full_prompt, max_output_tokens=2048 if not include_drafts else None)
         )
-        data = _cleanup_briefing_items(data, request.messages)
+        data = _cleanup_briefing_items(data, messages)
         return AnalysisResponse(**data)
     except Exception as e:
         if _is_quota_error(e):
@@ -292,7 +372,8 @@ def health():
 @app.post("/api/drafts", response_model=DraftsResponse)
 async def drafts(request: DraftsRequest):
     try:
-        messages_json = _prepare_messages_json(request.messages)
+        messages = _normalize_incoming_messages(request.messages)
+        messages_json = _prepare_messages_json(messages)
         triage_json = json.dumps(
             [t.model_dump(by_alias=True) for t in request.triage],
             separators=(",", ":"),

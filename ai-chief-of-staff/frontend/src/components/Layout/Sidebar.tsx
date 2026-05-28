@@ -67,26 +67,7 @@ function NavItem({ label, icon, active, onClick, badge }: NavItemProps) {
     <button
       type="button"
       onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        width: '100%',
-        height: '48px',
-        paddingLeft: '16px',
-        paddingRight: '16px',
-        border: 'none',
-        borderLeft: active ? '2px solid var(--text-primary)' : '2px solid transparent',
-        background: active ? 'var(--bg-primary)' : 'transparent',
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'background 150ms ease',
-      }}
-      onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.background = 'var(--bg-tertiary)'
-      }}
-      onMouseLeave={(e) => {
-        if (!active) e.currentTarget.style.background = active ? 'var(--bg-primary)' : 'transparent'
-      }}
+      className={`nav-item ${active ? 'nav-item-active' : ''}`}
     >
       <span
         style={{
@@ -140,66 +121,52 @@ export default function Sidebar({
   })
 
   return (
-    <aside
-      className="no-print"
-      style={{
-        width: '240px',
-        flexShrink: 0,
-        background: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-      }}
-    >
-      <div style={{ padding: '24px 16px 16px' }}>
-        <h1 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
-          Chief of Staff
-        </h1>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{today}</p>
-      </div>
+    <aside className="no-print">
+      <div className="sidebar-shell">
+        <div className="sidebar-brand">
+          <h1 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>
+            Chief of Staff
+          </h1>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{today}</p>
+        </div>
 
-      <nav style={{ flex: 1 }}>
-        <NavItem
-          label="Briefing"
-          icon={<DocumentIcon />}
-          active={activeSection === 'briefing'}
-          onClick={() => onNavigate('briefing')}
-        />
-        <NavItem
-          label="Triage"
-          icon={<InboxIcon />}
-          active={activeSection === 'triage'}
-          onClick={() => onNavigate('triage')}
-          badge={{ count: decideCount, color: 'red' }}
-        />
-        <NavItem
-          label="Flags"
-          icon={<WarningIcon />}
-          active={activeSection === 'flags'}
-          onClick={() => onNavigate('flags')}
-          badge={{ count: flagsCount, color: 'amber' }}
-        />
-      </nav>
+        <nav style={{ flex: 1 }}>
+          <NavItem
+            label="Briefing"
+            icon={<DocumentIcon />}
+            active={activeSection === 'briefing'}
+            onClick={() => onNavigate('briefing')}
+          />
+          <NavItem
+            label="Triage"
+            icon={<InboxIcon />}
+            active={activeSection === 'triage'}
+            onClick={() => onNavigate('triage')}
+            badge={{ count: decideCount, color: 'red' }}
+          />
+          <NavItem
+            label="Flags"
+            icon={<WarningIcon />}
+            active={activeSection === 'flags'}
+            onClick={() => onNavigate('flags')}
+            badge={{ count: flagsCount, color: 'amber' }}
+          />
+        </nav>
 
-      <div style={{ padding: '12px 12px 24px' }}>
-        <button
-          type="button"
-          onClick={onNewAnalysis}
-          style={{
-            width: '100%',
-            height: '36px',
-            background: 'var(--bg-primary)',
-            border: '1px solid var(--border)',
-            borderRadius: '6px',
-            fontSize: '13px',
-            fontWeight: 500,
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-          }}
-        >
-          New analysis
-        </button>
+        <div style={{ padding: '12px 12px 24px' }}>
+          <button
+            type="button"
+            onClick={onNewAnalysis}
+            className="btn"
+            style={{
+              width: '100%',
+              height: '36px',
+              fontSize: '13px',
+            }}
+          >
+            New analysis
+          </button>
+        </div>
       </div>
     </aside>
   )

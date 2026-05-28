@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
@@ -60,11 +60,11 @@ class Message(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    messages: list[Message]
+    messages: list[dict[str, Any]]
 
 
 class DraftsRequest(BaseModel):
-    messages: list[Message]
+    messages: list[dict[str, Any]]
     triage: list[TriageItem]
 
 

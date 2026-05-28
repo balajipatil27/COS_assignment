@@ -74,21 +74,9 @@ export default function TriageCard({ item }: TriageCardProps) {
 
   return (
     <article
+      className="elevated-card"
       style={{
-        background: 'var(--bg-primary)',
-        border: '1px solid var(--border)',
-        borderRadius: '8px',
         padding: '16px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-        transition: 'box-shadow 200ms ease, border-color 200ms ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)'
-        e.currentTarget.style.borderColor = 'var(--border-strong)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)'
-        e.currentTarget.style.borderColor = 'var(--border)'
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

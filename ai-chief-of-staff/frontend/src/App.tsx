@@ -127,7 +127,7 @@ export default function App() {
   const flagsCount = analysis?.flags.length ?? 0
 
   return (
-    <div className="app-layout" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div className="app-layout shell">
       <Sidebar
         activeSection={activeSection}
         onNavigate={setActiveSection}
@@ -135,16 +135,7 @@ export default function App() {
         decideCount={decideCount}
         flagsCount={flagsCount}
       />
-      <div
-        className="main-content"
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          background: 'var(--bg-primary)',
-          overflow: 'hidden',
-        }}
-      >
+      <div className="main-content main-pane">
         {appState === 'loading' ? (
           <>
             <header
@@ -166,32 +157,12 @@ export default function App() {
               flags={analysis?.flags ?? []}
             />
             {error && (
-              <div
-                style={{
-                  background: '#FFF5F5',
-                  color: '#C53030',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  borderBottom: '1px solid #FEB2B2',
-                }}
-              >
+              <div className="banner banner-error">
                 {error}
               </div>
             )}
             {analysis && activeSection === 'triage' && draftsMissing && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  padding: '12px 24px',
-                  borderBottom: '1px solid var(--border)',
-                  background: 'var(--bg-secondary)',
-                  color: 'var(--text-secondary)',
-                  fontSize: '14px',
-                }}
-              >
+              <div className="banner banner-neutral">
                 <span>
                   Drafted responses are not generated yet. Generate them on-demand to speed up analysis.
                 </span>
@@ -199,23 +170,16 @@ export default function App() {
                   type="button"
                   onClick={handleGenerateDrafts}
                   disabled={drafting}
+                  className="btn btn-sm"
                   style={{
-                    padding: '8px 14px',
-                    background: 'var(--bg-primary)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '6px',
-                    cursor: drafting ? 'not-allowed' : 'pointer',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: 'var(--text-secondary)',
-                    opacity: drafting ? 0.7 : 1,
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   {drafting ? 'Generating…' : 'Generate drafted responses'}
                 </button>
               </div>
             )}
-            <main style={{ flex: 1, overflow: 'auto', padding: '24px' }}>
+            <main className="content-area">
               {analysis ? (
                 <>
                   {activeSection === 'briefing' && <BriefingView briefing={analysis.briefing} />}

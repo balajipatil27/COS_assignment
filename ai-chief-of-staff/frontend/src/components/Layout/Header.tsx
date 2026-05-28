@@ -25,19 +25,8 @@ export default function Header({ section, decideCount, delegatedCount, flags }: 
   const flagPill = getFlagPillColor(flags)
 
   return (
-    <header
-      className="no-print"
-      style={{
-        height: '56px',
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        background: 'var(--bg-primary)',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
+    <header className="no-print">
+      <div className="header-shell" style={{ width: '100%' }}>
       <h1 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
         {sectionTitles[section]}
       </h1>
@@ -78,6 +67,7 @@ export default function Header({ section, decideCount, delegatedCount, flags }: 
         >
           {flags.length} flagged
         </span>
+      </div>
       </div>
     </header>
   )
