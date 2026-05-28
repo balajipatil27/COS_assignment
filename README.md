@@ -17,6 +17,16 @@ The UI is designed for fast decision-making, with a two-stage workflow:
 
 This keeps initial load time low while still allowing detailed responses when needed.
 
+The Generated Briefing 
+<img width="1600" height="761" alt="WhatsApp Image 2026-05-28 at 18 55 20" src="https://github.com/user-attachments/assets/36256adb-a8c5-4f01-abe7-08b9c92d8305" />
+
+Triage
+<img width="1600" height="753" alt="WhatsApp Image 2026-05-28 at 18 55 38" src="https://github.com/user-attachments/assets/2b115a3a-6493-417d-aa21-7a2bf92db1d1" />
+
+Issues
+<img width="1919" height="918" alt="image" src="https://github.com/user-attachments/assets/0eadbc19-5fd3-4c9c-9796-fb9fb6e779d1" />
+
+
 ## Project Structure
 
 ```text
