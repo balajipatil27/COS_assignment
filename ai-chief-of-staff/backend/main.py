@@ -175,8 +175,47 @@ def _normalize_analysis_payload(data: dict) -> dict:
     triage = data.get("triage")
     if isinstance(triage, list):
         for item in triage:
-            if isinstance(item, dict) and "delegate_to" in item:
+            if not isinstance(item, dict):
+                continue
+
+            # Ensure required fields exist with safe defaults.
+            if not isinstance(item.get("id"), int):
+                item["id"] = 0
+            if not isinstance(item.get("subject"), str):
+                item["subject"] = "No subject"
+            if not isinstance(item.get("reasoning"), str):
+                item["reasoning"] = "No reasoning provided."
+            if not isinstance(item.get("thread_ids"), list):
+                item["thread_ids"] = []
+            if not isinstance(item.get("drafted_response"), str):
+                item["drafted_response"] = ""
+            if not isinstance(item.get("from"), str):
+                item["from"] = "Unknown sender"
+
+            channel = str(item.get("channel", "")).strip().lower()
+            if channel not in {"email", "slack", "whatsapp"}:
+                item["channel"] = "email"
+            else:
+                item["channel"] = channel
+
+            urgency = str(item.get("urgency", "")).strip().upper()
+            if urgency not in {"HIGH", "MEDIUM", "LOW"}:
+                item["urgency"] = "LOW"
+            else:
+                item["urgency"] = urgency
+
+            if "delegate_to" in item:
                 item["delegate_to"] = _delegate_to_to_string(item.get("delegate_to"))
+            else:
+                item["delegate_to"] = None
+
+            # Some model responses incorrectly output a flag type in triage.category.
+            # Coerce unknown categories to a safe fallback based on presence of delegate_to.
+            category = str(item.get("category", "")).strip().upper()
+            if category not in {"DECIDE", "DELEGATE", "IGNORE"}:
+                item["category"] = "DELEGATE" if item.get("delegate_to") else "IGNORE"
+            else:
+                item["category"] = category
 
     flags = data.get("flags")
     if isinstance(flags, list):

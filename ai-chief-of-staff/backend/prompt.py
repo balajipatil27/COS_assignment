@@ -235,6 +235,12 @@ FLAGS (raise when applicable): SECURITY_RISK, SCHEDULING_CONFLICT, LIVE_INCIDENT
 CEO decides: fundraising, major client risk, VP+ hiring, live revenue incidents, board matters.
 Team decides everything else.
 
+BRIEFING QUALITY RULES:
+- Write briefing.sections.items as short executive actions, not raw message copies.
+- Never return placeholders like "Msg #12", "[object Object]", or sender metadata dumps.
+- Use concrete phrasing: owner + action + deadline/risk where possible.
+- Keep each item under 15 words and decision-oriented.
+
 SCHEMA: {_SCHEMA}"""
 
 # ─────────────────────────────────────────────
@@ -272,6 +278,20 @@ HARD_DEADLINE — real expiry that will be missed.
 
 PHISHING SIGNALS: domain mismatch, artificial urgency, unusual links/tokens → IGNORE + SECURITY_RISK.
 TONE: email=professional | slack=brief/lowercase | whatsapp=conversational/brief.
+
+BRIEFING WRITING STANDARD (critical):
+- The briefing is the CEO's 90-second view. It must be sharp and executive-ready.
+- In sections.items, write concise action lines (not copied email subjects).
+- Good format examples:
+  * "Confirm Meridian call slot and send cap table by Wednesday 6 PM"
+  * "Decide rollback vs hotfix for checkout failures within one hour"
+  * "Approve CRO offer deviations (6-month cliff, 3-month severance) by Wednesday"
+- Avoid:
+  * Message IDs ("Msg #7")
+  * Sender-only lines ("Rajiv Mehta <...>")
+  * Generic/noisy text ("FYI update shared")
+- Each item should ideally include: what decision/action, owner, timing/risk.
+- Keep items under 15 words; keep bottom_line concrete with first 2 priorities.
 
 SCHEMA: {_SCHEMA}"""
 
