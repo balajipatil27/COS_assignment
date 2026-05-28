@@ -22,12 +22,15 @@ This keeps initial load time low while still allowing detailed responses when ne
 ```text
 ai-chief-of-staff/
 ├── backend/
+│   ├── Dockerfile
 │   ├── main.py
 │   ├── models.py
 │   ├── prompt.py
 │   ├── requirements.txt
 │   └── .env.example
 ├── frontend/
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   ├── src/
 │   │   ├── api/
 │   │   ├── components/
@@ -39,6 +42,8 @@ ai-chief-of-staff/
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── vite.config.ts
+├── docker-compose.yml
+├── .env.example
 └── README.md
 ```
 
@@ -50,10 +55,53 @@ ai-chief-of-staff/
 
 ## Prerequisites
 
-- Python `3.11+` (recommended: `3.12`)
-- Node.js `18+`
-- npm
+- Python `3.11+` (recommended: `3.12`) — for local dev only
+- Node.js `18+` — for local dev only
+- npm — for local dev only
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (optional, for containerized run)
 - Gemini API key
+
+## Docker (recommended)
+
+Run the full stack with Docker Compose. The frontend container serves the built React app on port **8080** and proxies `/api` requests to the backend.
+
+### 1) Configure environment
+
+From the project root (`ai-chief-of-staff/`):
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set your Gemini key:
+
+```env
+GEMINI_API_KEY=your_key_here
+```
+
+### 2) Build and start
+
+```bash
+docker compose up --build
+```
+
+### 3) Open the app
+
+- **UI**: <http://localhost:8080>
+- **API (direct)**: <http://localhost:8000/health>
+
+Stop containers:
+
+```bash
+docker compose down
+```
+
+### Docker notes
+
+- API calls from the browser go to `/api/...` on the same host (port 8080); nginx forwards them to the backend service.
+- To call the backend directly from your machine (curl, Postman), use `http://localhost:8000`.
+- Rebuild after code changes: `docker compose up --build`
+- Environment variables in `.env` are passed to the backend container (see `.env.example`).
 
 ## Local Setup
 
@@ -96,6 +144,10 @@ npm run dev
 Open:
 
 - <http://localhost:5173>
+
+The Vite dev server proxies `/api` to `http://localhost:8000`, so you do not need to set `VITE_API_BASE_URL` for local development.
+
+Optional: set `VITE_API_BASE_URL=http://localhost:8000` in `frontend/.env.local` if you prefer absolute API URLs.
 
 ## Usage Flow
 
@@ -185,6 +237,8 @@ The backend includes defensive normalization for model output:
 
 ## Troubleshooting
 
+- **Docker: backend exits immediately**: ensure `GEMINI_API_KEY` is set in the root `.env` used by `docker compose`.
+- **Docker: frontend loads but analysis fails**: check `docker compose logs backend` for API or quota errors.
 - **403 leaked API key**: rotate key and update `.env`.
 - **429 quota exceeded**: wait/reset quota, enable billing, or switch model.
 - **JSON parse errors from model**: retry (handled internally), keep compact mode.

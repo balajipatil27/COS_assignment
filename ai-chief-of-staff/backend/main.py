@@ -10,7 +10,11 @@ from models import AnalyzeRequest, AnalysisResponse, DraftsRequest, DraftsRespon
 from prompt import get_system_prompt
 
 load_dotenv()
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
+_api_key = os.getenv("GEMINI_API_KEY")
+if not _api_key:
+    raise RuntimeError("GEMINI_API_KEY is not set. Add it to backend/.env or Docker env.")
+genai.configure(api_key=_api_key)
 
 DEFAULT_MODEL = "gemini-2.0-flash"
 # flash-lite is faster and cheaper; override in .env if needed
@@ -25,10 +29,19 @@ FALLBACK_MODELS = [
 ]
 MAX_BODY_CHARS = int(os.getenv("MAX_MESSAGE_BODY_CHARS", "600"))
 
+_cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:8080,http://localhost",
+    ).split(",")
+    if origin.strip()
+]
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -1,5 +1,7 @@
 import type { AnalysisResponse, Message } from '../types'
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ?? ''
+
 function formatDetail(detail: unknown): string {
   if (typeof detail === 'string') return detail
   if (Array.isArray(detail)) {
@@ -32,7 +34,7 @@ async function readErrorMessage(res: Response): Promise<string> {
 }
 
 export async function analyzeMessages(messages: Message[]): Promise<AnalysisResponse> {
-  const res = await fetch('http://localhost:8000/api/analyze', {
+  const res = await fetch(`${API_BASE}/api/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages }),
@@ -54,7 +56,7 @@ interface DraftsResponse {
 }
 
 export async function generateDrafts(messages: Message[], triage: AnalysisResponse['triage']) {
-  const res = await fetch('http://localhost:8000/api/drafts', {
+  const res = await fetch(`${API_BASE}/api/drafts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages, triage }),
